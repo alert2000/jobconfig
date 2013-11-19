@@ -1,0 +1,16 @@
+- job:
+    name: Start
+    project-type: freestyle
+    description: Start Job, which going to execute helloworld object with a parameter "Jenkins Test"
+
+    parameters:
+        - string:
+            name: DEPLOY_PATH
+            default:
+            description: "jar file from location prepared in previous."
+
+    builders:
+        - shell: |
+                 #!/bin/bash -xe
+                 echo $DEPLOY_PATH
+                 java -cp $DEPLOY_PATH HelloWorld "Jenkins Test"

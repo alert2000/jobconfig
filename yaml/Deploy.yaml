@@ -1,0 +1,28 @@
+- job:
+    name: Deploy
+    project-type: freestyle
+    description: Deploy Job, it will take jar file produced by previous Job and put it into /temp/YYMMDD-XX folder
+
+    parameters:
+        - string:
+            name: JAR_PATH
+            default:
+            description: "The output jar file path of previous Job"
+
+    builders:
+        - shell: |
+                 #!/bin/bash -xe
+                 strDate=`date +%y%m%d`
+                 targetPath=/temp/${strDate}-${BUILD_NUMBER}
+                 mkdir -p $targetPath
+                 cp -f $JAR_PATH $targetPath
+
+                 deployPath=`ls $targetPath/*.jar`
+                 echo DEPLOY_PATH=$deployPath > propsfile_${BUILD_NUMBER}
+
+    publishers:
+        - trigger-parameterized-builds:
+            - project: Start
+              property-file: propsfile_${BUILD_NUMBER}
+              fail-on-missing: true
+              condition: SUCCESS

@@ -1,0 +1,46 @@
+- job:
+    name: Build
+    project-type: freestyle
+    description: Build Job, which going to execute maven build, run junit tests and produce jar file
+    quiet-period: 60
+
+    properties:
+        - github:
+            url: https://github.com/velniukas/helloworld
+
+    scm:
+        - git:
+            url: https://github.com/velniukas/helloworld
+            branches:
+                - master
+
+    triggers:
+        - github
+
+    builders:
+        - shell: |
+                 #!/bin/bash -xe
+                 mv src/main/scripts/postinstall.sh src/main/scripts/postinstall
+                 mv src/main/scripts/preremove.sh src/main/scripts/preremove
+
+        - maven-target:
+            pom: pom.xml
+            goals: |
+                   clean
+                   site
+                   package
+
+        - shell: |
+                 #!/bin/bash -xe
+                 jarPath=`pwd`/`ls target/helloworld*.jar`
+                 echo JAR_PATH=${jarPath} > propsfile_${BUILD_NUMBER}
+
+    publishers:
+        - trigger-parameterized-builds:
+            - project: Deploy
+              property-file: propsfile_${BUILD_NUMBER}
+              fail-on-missing: true
+              condition: SUCCESS
+  
+
+
